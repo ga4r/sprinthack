@@ -20,9 +20,6 @@ class BaseStation:
     standard: str
     installation_coordinates: str = ""
 
-    def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
-
     def is_handover_ok(self) -> Optional[bool]:
         if self.handover_avg is None or self.handover_min is None or self.handover_max is None:
             return None

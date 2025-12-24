@@ -99,6 +99,29 @@ class Zone:
         d1, d2, d3 = diameters
         return (d1 ** (5 / 2)) + (d2 ** (3 / 2)) + (d3 ** (1 / 2))
 
+    def is_handover_ok(self) -> Optional[bool]:
+        """
+        Проверяет, все ли станции имеют корректные показатели хэндовера.
+        Возвращает False если хотя бы одна станция имеет is_handover_ok() == False.
+        Возвращает None если все станции вернули None.
+        Возвращает True только если все станции вернули True.
+        """
+        if not self.base_stations:
+            return None
+        
+        results = [st.is_handover_ok() for st in self.base_stations]
+        
+        # Если хотя бы одна станция имеет False - возвращаем False
+        if False in results:
+            return False
+        
+        # Если все None - возвращаем None
+        if all(r is None for r in results):
+            return None
+        
+        # В остальных случаях (все True или смесь True и None) - возвращаем True
+        return True
+
     def n_stations(self, cluster_stations: Optional[Sequence[BaseStation]] = None) -> float:
         """
         n = L/C
