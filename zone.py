@@ -46,28 +46,16 @@ class Zone:
         R = st.radius_km()
         return self.build_coeff() * (R0 / R) ** 2
 
-    def l_avg(self) -> float:
-        """
-        Обратите внимание, что при расчете количестве базовых станций по району значение L -среднее арифметическое по всем БС. 
-        """
+    def l_avg(self) -> float:   
         if not self.base_stations:
-            raise ValueError(f"Zone '{self.name}' has no base stations")
+            raise ValueError(f"Зона '{self.name}' не имеет станций")
         values = [self.l_for_station(st) for st in self.base_stations]
         return sum(values) / len(values)
 
     def choose_cluster_stations(self) -> Tuple[BaseStation, BaseStation, BaseStation]:
-        """
-        Кластер состоит из С базовых станций, работающих в разных диапазонах частот. С - аддитивная (суммирующая) составляющая, равная:
-         C = D1^(5/2) + D2^(3/2) + D3^(1/2), где D1, D2, D3- диаметры 3-х любых базовых станций с разной частотой, в порядке убывания, то есть - D1 - наибольший диаметр, D3 - наименьший диаметр. 
-
-        Выбирает 3 БС для кластера:
-        - с разными частотами;
-        - сортировка с наибольшими диаметрами.
-        """
         if len(self.base_stations) < 3:
-            raise ValueError("Need at least 3 base stations to form a cluster")
+            raise ValueError("нужно как минимум 3 базовые станции для формирования кластера")
 
-        # сортируем по диаметру
         sorted_by_diameter = sorted(self.base_stations, key=lambda s: s.diameter_km(), reverse=True)
 
         chosen: List[BaseStation] = []
@@ -82,44 +70,33 @@ class Zone:
                 break
 
         if len(chosen) != 3:
-            raise ValueError("Not enough stations with distinct frequencies for a cluster")
+            raise ValueError("Недостаточно станций с разными частотами для кластера")
 
         return chosen[0], chosen[1], chosen[2]
 
     def cluster_c(self, stations: Optional[Sequence[BaseStation]] = None) -> float:
-        """
-        C = D1^(5/2) + D2^(3/2) + D3^(1/2), где D1>=D2>=D3.
-        """
         if stations is None:
             stations = self.choose_cluster_stations()
         if len(stations) != 3:
-            raise ValueError("stations must have length 3")
+            raise ValueError("Станции должны иметь минимальную длину 3")
 
         diameters = sorted([st.diameter_km() for st in stations], reverse=True)
         d1, d2, d3 = diameters
         return (d1 ** (5 / 2)) + (d2 ** (3 / 2)) + (d3 ** (1 / 2))
 
     def is_handover_ok(self) -> Optional[bool]:
-        """
-        Проверяет, все ли станции имеют корректные показатели хэндовера.
-        Возвращает False если хотя бы одна станция имеет is_handover_ok() == False.
-        Возвращает None если все станции вернули None.
-        Возвращает True только если все станции вернули True.
-        """
+
         if not self.base_stations:
             return None
         
         results = [st.is_handover_ok() for st in self.base_stations]
         
-        # Если хотя бы одна станция имеет False - возвращаем False
         if False in results:
             return False
         
-        # Если все None - возвращаем None
         if all(r is None for r in results):
             return None
         
-        # В остальных случаях (все True или смесь True и None) - возвращаем True
         return True
 
     def n_stations(self, cluster_stations: Optional[Sequence[BaseStation]] = None) -> float:

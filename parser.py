@@ -44,14 +44,6 @@ class BaseStationParser:
 
     @staticmethod
     def parse_handover_range(text: Any) -> Optional[Tuple[float, float]]:
-        """
-        Парсит диапазоны:
-        '12-18'
-        '14-20'
-        'от 11 до 19'
-        'от 10 до 17'
-        Возвращает (min, max) или None, если не распознано.
-        """
         if text is None or (isinstance(text, float) and pd.isna(text)):
             return None
         s = str(text).strip().lower()
